@@ -26,3 +26,16 @@ async def get_card(card_id: int, session: AsyncSession = Depends(get_session)):
     if not card:
         raise HTTPException(status_code=404, detail="Card not found")
     return {"id": card.id, "card_number": card.card_number, "type": card.card_type}
+
+
+@router.delete("/{card_id}", response_model=dict)
+async def delete_card(card_id: int):
+    async with async_session_factory() as session:
+        result = await session.execute(select(Card).filter(Card.id == card_id))
+        card = result.scalars().first()
+
+        if card:
+            await session.delete(card)
+            await session.commit()
+
+    return {"message": f"Account with id {card_id} has been deleted"}
