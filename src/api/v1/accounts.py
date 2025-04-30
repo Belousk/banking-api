@@ -29,4 +29,16 @@ async def get_account(account_id: int):
     return {"id": account.id, "account_number": account.account_number, "balance": float(account.balance)}
 
 
+@router.delete("/{account_id}", response_model=dict)
+async def delete_account(
+    account_id: int,
+):
+    async with async_session_factory() as session:
+        result = await session.execute(select(Account).filter(Account.id == account_id))
+        account = result.scalars().first()
 
+        if account:
+            await session.delete(account)
+            await session.commit()
+
+    return {"message": f"Account with id {account_id} has been deleted"}
