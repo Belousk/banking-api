@@ -7,6 +7,8 @@ from src.models.transactions import TransactionType
 from src.schemas.v1.base import BaseSchema
 
 # ------------ CLIENTS ------------
+class ClientGet(BaseSchema):
+    id: int
 
 class ClientCreate(BaseSchema):
     full_name: str = Field(min_length=2, max_length=255)
@@ -19,9 +21,9 @@ class ClientCreate(BaseSchema):
         if not phone_pattern.match(v):
             raise ValueError('Invalid phone number format. It must be digits, optional + at start.')
         return v
-
-class ClientOut(ClientCreate):
-    id: int
+class ClientUpdate(ClientCreate):
+    pass
+class ClientOut(ClientGet, ClientCreate):
     created_at: datetime
 
 # ------------ ACCOUNTS ------------
