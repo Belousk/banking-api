@@ -18,25 +18,11 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 
-
-# Пути к ключам
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-PRIVATE_KEY = open(BASE_DIR / "keys" / "private.pem", "rb").read()
-PUBLIC_KEY = open(BASE_DIR / "keys" / "public.pem", "rb").read()
-
-
-
-
-
 def get_db():
     async def _get_db():
         async with async_session_factory() as session:
             yield session
     return _get_db
-
-
-
-
 
 
 @router.post("/login")
@@ -55,13 +41,13 @@ async def login(
     access_token = create_token(
         {"sub": user.email, "type": "access"},
         timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
-        PRIVATE_KEY,
+        settings.PRIVATE_KEY,
         token_type='access'
     )
     refresh_token = create_token(
         {"sub": user.email, "type": "refresh"},
         timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
-        PRIVATE_KEY,
+        settings.PRIVATE_KEY,
         token_type='refresh'
     )
 
@@ -76,12 +62,12 @@ async def login(
 @router.post("/refresh")
 def refresh_token(refresh_token: str):
     try:
-        payload = jwt.decode(refresh_token, PUBLIC_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(refresh_token, settings.PUBLIC_KEY, algorithms=[settings.ALGORITHM])
         username = payload.get("sub")
         token_type = payload.get("type")
         if not username or token_type != "refresh":
             raise HTTPException(status_code=401, detail="Invalid token type")
-        new_token = create_token({"sub": username}, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES), PRIVATE_KEY, token_type="access")
+        new_token = create_token({"sub": username}, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES), settings.PRIVATE_KEY, token_type="access")
         return {"access_token": new_token, "token_type": "bearer"}
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid refresh token")

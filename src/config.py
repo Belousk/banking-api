@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pathlib import Path, PosixPath
 
 
 class Settings(BaseSettings):
@@ -10,6 +11,19 @@ class Settings(BaseSettings):
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     REFRESH_TOKEN_EXPIRE_DAYS: int
+    KEYS_DIR: PosixPath = Path(__file__).resolve().parent / "keys"
+
+    @property
+    def PUBLIC_KEY(self):
+        with open(self.KEYS_DIR / "public.pem", "rb") as f:
+            PUBLIC_KEY = f.read()
+        return PUBLIC_KEY
+
+    @property
+    def PRIVATE_KEY(self):
+        with open(self.KEYS_DIR / "private.pem", "rb") as f:
+            PRIVATE_KEY = f.read()
+        return PRIVATE_KEY
 
     @property
     def DATABASE_URL_psycopg(self):
