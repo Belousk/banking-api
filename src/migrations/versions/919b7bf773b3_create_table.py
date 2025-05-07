@@ -1,8 +1,8 @@
-"""create tables
+"""add users table
 
-Revision ID: e1dc63dfb6c2
+Revision ID: 919b7bf773b3
 Revises: 
-Create Date: 2025-04-27 12:02:10.559226
+Create Date: 2025-05-07 13:48:30.845442
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'e1dc63dfb6c2'
+revision: str = '919b7bf773b3'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -51,6 +51,17 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['client_id'], ['clients.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('users',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('email', sa.String(), nullable=False),
+    sa.Column('hashed_password', sa.String(), nullable=False),
+    sa.Column('client_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['client_id'], ['clients.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('client_id')
+    )
+    op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
+    op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
     op.create_table('cards',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('account_id', sa.Integer(), nullable=False),
@@ -91,8 +102,10 @@ def downgrade() -> None:
     op.drop_table('transactions')
     op.drop_table('payments')
     op.drop_table('cards')
+    op.drop_index(op.f('ix_users_id'), table_name='users')
+    op.drop_index(op.f('ix_users_email'), table_name='users')
+    op.drop_table('users')
     op.drop_table('loans')
     op.drop_table('accounts')
     op.drop_table('clients')
-    op.execute("DROP TYPE IF EXISTS transaction_type_enum;")
     # ### end Alembic commands ###

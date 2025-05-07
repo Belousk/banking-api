@@ -5,6 +5,8 @@ from sqlalchemy import String, TIMESTAMP, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database import Base
 
+
+
 class Client(Base):
     __tablename__ = "clients"
 
@@ -16,3 +18,4 @@ class Client(Base):
 
     accounts: Mapped[list["Account"]] = relationship("Account", back_populates="client", cascade="all, delete")
     loans: Mapped[list["Loan"]] = relationship("Loan", back_populates="client", cascade="all, delete")
+    user: Mapped["User"] = relationship("User", back_populates="client", uselist=False)
