@@ -55,12 +55,14 @@ async def login(
     access_token = create_token(
         {"sub": user.email, "type": "access"},
         timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
-        PRIVATE_KEY
+        PRIVATE_KEY,
+        token_type='access'
     )
     refresh_token = create_token(
         {"sub": user.email, "type": "refresh"},
         timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
-        PRIVATE_KEY
+        PRIVATE_KEY,
+        token_type='refresh'
     )
 
     return {
@@ -68,13 +70,6 @@ async def login(
         "refresh_token": refresh_token,
         "token_type": "bearer"
     }
-
-
-
-
-
-
-
 
 
 
