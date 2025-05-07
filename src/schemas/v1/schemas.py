@@ -93,3 +93,18 @@ class PaymentOut(PaymentCreate):
     id: int
     payment_date: datetime
 
+# ------------ USERS -------------
+
+class UserBase(BaseModel):
+    email: EmailStr
+
+class UserCreate(UserBase):
+    password: str
+    client_id: int
+
+class UserRead(UserBase):
+    id: int
+    client_id: Optional[int]
+
+    class Config:
+        orm_mode = True

@@ -4,56 +4,63 @@ from datetime import datetime, timedelta
 from jose import jwt, JWTError
 import hashlib
 from pathlib import Path
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.config import settings
+from src.database import async_session_factory
+from src.services import user_service
+from fastapi.security import OAuth2PasswordRequestForm
+
+from src.services.user_service import create_token
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 15
-REFRESH_TOKEN_EXPIRE_DAYS = 1
-ALGORITHM = "RS256"
+
+
 
 # Пути к ключам
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 PRIVATE_KEY = open(BASE_DIR / "keys" / "private.pem", "rb").read()
 PUBLIC_KEY = open(BASE_DIR / "keys" / "public.pem", "rb").read()
 
-# Фейковая база
-fake_users_db = {
-    "user@example.com": {
-        "username": "user@example.com",
-        "hashed_password": hashlib.sha256("secret".encode()).hexdigest()
-    }
-}
 
 
-def verify_password(plain_password, hashed_password):
-    return hashlib.sha256(plain_password.encode()).hexdigest() == hashed_password
 
 
-def create_token(data: dict, expires_delta: timedelta, key: bytes, token_type: str):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + expires_delta
-    to_encode.update({"exp": expire, "type": token_type})
-    return jwt.encode(to_encode, key, algorithm=ALGORITHM)
+def get_db():
+    async def _get_db():
+        async with async_session_factory() as session:
+            yield session
+    return _get_db
+
+
+
 
 
 
 @router.post("/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = fake_users_db.get(form_data.username)
-    if not user or not verify_password(form_data.password, user["hashed_password"]):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: AsyncSession = Depends(get_db())
+):
+    user = await user_service.get_user_by_email(db, form_data.username)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    hashed_input = hashlib.sha256(form_data.password.encode()).hexdigest()
+    if hashed_input != user.hashed_password:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
     access_token = create_token(
-        {"sub": user["username"]},
-        timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
-        PRIVATE_KEY,
-        token_type="access"
+        {"sub": user.email, "type": "access"},
+        timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+        PRIVATE_KEY
     )
     refresh_token = create_token(
-        {"sub": user["username"]},
-        timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
-        PRIVATE_KEY,
-        token_type="refresh"
+        {"sub": user.email, "type": "refresh"},
+        timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+        PRIVATE_KEY
     )
 
     return {
@@ -63,15 +70,23 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     }
 
 
+
+
+
+
+
+
+
+
 @router.post("/refresh")
 def refresh_token(refresh_token: str):
     try:
-        payload = jwt.decode(refresh_token, PUBLIC_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(refresh_token, PUBLIC_KEY, algorithms=[settings.ALGORITHM])
         username = payload.get("sub")
         token_type = payload.get("type")
         if not username or token_type != "refresh":
             raise HTTPException(status_code=401, detail="Invalid token type")
-        new_token = create_token({"sub": username}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES), PRIVATE_KEY, token_type="access")
+        new_token = create_token({"sub": username}, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES), PRIVATE_KEY, token_type="access")
         return {"access_token": new_token, "token_type": "bearer"}
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid refresh token")

@@ -4,6 +4,7 @@ from .transactions import Transaction
 from .loans import Loan
 from .payments import Payment
 from .clients import Client
+from .users import User
 
 __all__ = [
     "Client",
@@ -12,4 +13,5 @@ __all__ = [
     "Transaction",
     "Loan",
     "Payment",
+    "User"
 ]
