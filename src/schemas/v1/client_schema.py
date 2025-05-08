@@ -1,4 +1,9 @@
+from pydantic import Field, EmailStr, validator
+from datetime import datetime
+import re
+
 from src.schemas.v1.base import BaseSchema
+
 
 
 class ClientGet(BaseSchema):

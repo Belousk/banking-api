@@ -1,5 +1,8 @@
-from src.schemas.v1.base import BaseSchema
+from pydantic import Field
+from typing import Optional
+from datetime import datetime
 
+from src.schemas.v1.base import BaseSchema
 
 class MoneyTransferRequest(BaseSchema):
     sender_account_id: int = Field(..., description="Sender account ID")

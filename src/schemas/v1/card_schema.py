@@ -1,9 +1,7 @@
-from pydantic import Field, EmailStr, validator, BaseModel
+from pydantic import Field
 from typing import Optional
-from datetime import datetime, date
-import re
+from datetime import date
 
-from src.models.transactions import TransactionType
 from src.schemas.v1.base import BaseSchema
 
 
