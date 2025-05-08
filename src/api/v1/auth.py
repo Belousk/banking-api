@@ -3,16 +3,12 @@ from fastapi.security import OAuth2PasswordRequestForm
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
 import hashlib
-from pathlib import Path
-from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import settings
-from src.database import async_session_factory, get_db
-from src.services import user_service
-from fastapi.security import OAuth2PasswordRequestForm
+from src.database import get_db
 
-from src.services.user_service import create_token
+from src.services.client_service import create_token, get_client_by_email
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -23,7 +19,7 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db)
 ):
-    user = await user_service.get_user_by_email(db, form_data.username)
+    user = await get_client_by_email(db, form_data.username)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 

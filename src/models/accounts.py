@@ -24,7 +24,7 @@ class Account(Base):
         back_populates="receiver_account",
         foreign_keys="[Transaction.receiver_account_id]"
     )
-    client: Mapped["Client"] = relationship(back_populates="account")
+    client: Mapped["Client"] = relationship(back_populates="account", uselist=False)
 
     cards: Mapped[List["Card"]] = relationship(
         "Card",

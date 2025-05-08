@@ -4,17 +4,18 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from src.database import async_session_factory, get_db
-from src.schemas.v1.schemas import AccountCreate, AccountOut, MoneyTransferResponse, MoneyTransferRequest
+from src.schemas.v1.account_schema import AccountCreate, AccountOut
+from src.schemas.v1.transaction_schema import (MoneyTransferResponse,
+                                               MoneyTransferRequest,
+                                               TransactionCreate,
+                                               TransactionOut,
+                                               TransactionHistoryOut,
+                                               MoneyTransferRequest,
+                                               MoneyTransferResponse)
 from src.models import Transaction
 from src.models.transactions import TransactionType
-from src.schemas.v1.schemas import TransactionCreate, TransactionOut
 from typing import List, Optional, Any, AsyncGenerator
 from src.models import Transaction, Account, Client
-from src.schemas.v1.schemas import (
-    TransactionHistoryOut,
-    MoneyTransferRequest,
-    MoneyTransferResponse
-)
 
 
 

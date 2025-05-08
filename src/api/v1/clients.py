@@ -2,15 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from src.database import async_session_factory as async_session, async_session_factory, get_db
-from src.models import Client, User
-from src.schemas.v1.schemas import ClientCreate, ClientOut, ClientUpdate
+from src.database import get_db
+from src.models import Client
+from src.schemas.v1.client_schema import ClientCreate, ClientOut, ClientUpdate
 
-
-from fastapi import Depends
-from src.api.v1.dependencies import get_current_user
-
-
+from src.api.v1.dependencies import get_current_client
+from src.services.client_service import create_client_db
 
 router = APIRouter(prefix="/clients", tags=["Clients"])
 
@@ -18,17 +15,17 @@ router = APIRouter(prefix="/clients", tags=["Clients"])
 @router.post("/", response_model=dict)
 async def create_client(
     client: ClientCreate,
+    password: str,
     session: AsyncSession = Depends(get_db)
 ) -> dict:
-    session.add(client)
-    await session.commit()
+    await create_client_db(session, client, password)
     return {'message': "User created successfully"}
 
 
 @router.get("/{client_id}", response_model=ClientOut)
 async def get_client(
     client_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: Client = Depends(get_current_client),
     session: AsyncSession = Depends(get_db)
 ) -> ClientOut:
     if current_user.client_id != client_id:
@@ -44,7 +41,7 @@ async def get_client(
 async def update_client(
     client_id: int,
     client_data: ClientCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: Client = Depends(get_current_client),
     session: AsyncSession = Depends(get_db)
 ):
     if current_user.id != client_id:
@@ -69,7 +66,7 @@ async def update_client(
 @router.delete("/{client_id}", response_model=dict)
 async def delete_client(
     client_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: Client = Depends(get_current_client),
     session: AsyncSession = Depends(get_db)
 ):
     if current_user.id != client_id:

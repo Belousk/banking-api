@@ -4,15 +4,15 @@ from jose import jwt, JWTError
 
 from src.config import settings
 from src.database import async_session_factory
-from src.models.users import User
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from src.models import Client
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
+async def get_current_client(token: str = Depends(oauth2_scheme)) -> Client:
     try:
         payload = jwt.decode(token, settings.PUBLIC_KEY, algorithms=[settings.ALGORITHM])
         if payload.get("type") != "access":
@@ -24,7 +24,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
         raise HTTPException(status_code=401, detail="Invalid token")
 
     async with async_session_factory() as session:
-        result = await session.execute(select(User).where(User.email == email))
+        result = await session.execute(select(Client).where(Client.email == email))
         user = result.scalar_one_or_none()
         if user is None:
             raise HTTPException(status_code=401, detail="User not found")

@@ -17,5 +17,4 @@ class Client(Base):
     phone_number: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
 
-    account: Mapped["Account"] = relationship("Account", back_populates="client", cascade="all, delete")
-    user: Mapped["User"] = relationship("User", back_populates="client", uselist=False)
+    account: Mapped["Account"] = relationship("Account", back_populates="client", uselist=False)

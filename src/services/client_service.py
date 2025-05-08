@@ -30,8 +30,8 @@ async def update_client_data(session: AsyncSession, client: ClientUpdate) -> Cli
     return ClientOut.model_validate(client_db)
 
 
-async def create_user(db: AsyncSession, client: ClientCreate) -> ClientOut:
-    hashed_password = hashlib.sha256(client.password.encode()).hexdigest()
+async def create_client_db(db: AsyncSession, client: ClientCreate, password) -> ClientOut:
+    hashed_password = hashlib.sha256(password.encode()).hexdigest()
     db_user = Client(
         full_name = client.full_name,
         email = client.email,
