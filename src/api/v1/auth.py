@@ -19,22 +19,22 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db)
 ):
-    user = await get_client_by_email(db, form_data.username)
-    if not user:
+    client = await get_client_by_email(db, form_data.username)
+    if not client:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     hashed_input = hashlib.sha256(form_data.password.encode()).hexdigest()
-    if hashed_input != user.hashed_password:
+    if hashed_input != client.hashed_password:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     access_token = create_token(
-        {"sub": user.email, "type": "access"},
+        {"sub": client.email, "type": "access"},
         timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
         settings.PRIVATE_KEY,
         token_type='access'
     )
     refresh_token = create_token(
-        {"sub": user.email, "type": "refresh"},
+        {"sub": client.email, "type": "refresh"},
         timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
         settings.PRIVATE_KEY,
         token_type='refresh'

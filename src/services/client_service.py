@@ -17,6 +17,11 @@ async def get_client_by_email(session: AsyncSession, email: str) -> ClientOut:
     result = await session.execute(stmt)
     return ClientOut.model_validate(result.scalar_one_or_none(), from_attributes=True)
 
+async def get_client_by_id(session: AsyncSession, client_id: str) -> ClientOut:
+    stmt = select(Client).where(Client.id == client_id)
+    result = await session.execute(stmt)
+    return ClientOut.model_validate(result.scalar_one_or_none(), from_attributes=True)
+
 
 
 async def update_client_data(session: AsyncSession, client: ClientUpdate) -> ClientOut:

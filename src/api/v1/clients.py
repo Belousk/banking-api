@@ -19,7 +19,7 @@ async def create_client(
     session: AsyncSession = Depends(get_db)
 ) -> dict:
     await create_client_db(session, client, password)
-    return {'message': "User created successfully"}
+    return {'message': "Client created successfully"}
 
 
 @router.get("/{client_id}", response_model=ClientOut)
@@ -41,10 +41,10 @@ async def get_client(
 async def update_client(
     client_id: int,
     client_data: ClientUpdate,
-    current_user: Client = Depends(get_current_client),
+    current_client: Client = Depends(get_current_client),
     session: AsyncSession = Depends(get_db)
-):
-    if current_user.id != client_id:
+) -> dict:
+    if current_client.id != client_id:
         raise HTTPException(status_code=403, detail="Access forbidden")
     client_data.id = client_id
     await update_client_data(session, client_data)
@@ -53,10 +53,10 @@ async def update_client(
 @router.delete("/{client_id}", response_model=dict)
 async def delete_client(
     client_id: int,
-    current_user: Client = Depends(get_current_client),
+    current_client: Client = Depends(get_current_client),
     session: AsyncSession = Depends(get_db)
-):
-    if current_user.id != client_id:
+) -> dict:
+    if current_client.id != client_id:
         raise HTTPException(status_code=403, detail="Access forbidden")
 
     result = await session.execute(select(Client).filter(Client.id == client_id))
