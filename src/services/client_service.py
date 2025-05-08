@@ -17,7 +17,7 @@ async def get_client_by_email(session: AsyncSession, email: str) -> ClientOut:
     result = await session.execute(stmt)
     return ClientOut.model_validate(result.scalar_one_or_none(), from_attributes=True)
 
-async def get_client_by_id(session: AsyncSession, client_id: str) -> ClientOut:
+async def get_client_by_id(session: AsyncSession, client_id: int) -> ClientOut:
     stmt = select(Client).where(Client.id == client_id)
     result = await session.execute(stmt)
     return ClientOut.model_validate(result.scalar_one_or_none(), from_attributes=True)
@@ -34,7 +34,7 @@ async def update_client_data(session: AsyncSession, client: ClientUpdate) -> Cli
     return ClientOut.model_validate(client_db)
 
 
-async def create_client_db(db: AsyncSession, client: ClientCreate, password) -> ClientOut:
+async def create_client_db(db: AsyncSession, client: ClientCreate, password: str) -> ClientOut:
     hashed_password = hashlib.sha256(password.encode()).hexdigest()
     db_user = Client(
         full_name = client.full_name,
@@ -47,6 +47,13 @@ async def create_client_db(db: AsyncSession, client: ClientCreate, password) -> 
     await db.refresh(db_user)
 
     return ClientOut.model_validate(db_user, from_attributes=True)
+
+async def delete_client_db(client_id: int, db: AsyncSession):
+    client = await get_client_by_id(db, client_id)
+
+    if client:
+        await db.delete(client)
+        await db.commit()
 
 def verify_password(plain_password, hashed_password):
     return hashlib.sha256(plain_password.encode()).hexdigest() == hashed_password

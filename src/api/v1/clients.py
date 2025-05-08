@@ -7,7 +7,7 @@ from src.models import Client
 from src.schemas.v1.client_schema import ClientCreate, ClientOut, ClientUpdate
 
 from src.api.v1.dependencies import get_current_client
-from src.services.client_service import create_client_db, update_client_data
+from src.services.client_service import create_client_db, update_client_data, delete_client_db
 
 router = APIRouter(prefix="/clients", tags=["Clients"])
 
@@ -21,49 +21,33 @@ async def create_client(
     await create_client_db(session, client, password)
     return {'message': "Client created successfully"}
 
-
-@router.get("/{client_id}", response_model=ClientOut)
+# TODO come up with a name to route (here client get info about him self)
+@router.get("/get_me", response_model=ClientOut)
 async def get_client(
-    client_id: int,
-    current_client: Client = Depends(get_current_client),
-    session: AsyncSession = Depends(get_db)
+    current_client: Client = Depends(get_current_client)
 ) -> ClientOut:
-    if current_client.id != client_id:
-        raise HTTPException(status_code=403, detail="Access forbidden")
-
-    result = await session.execute(select(Client).where(Client.id == client_id))
-    client = result.scalar_one_or_none()
-    if not client:
+    if not current_client:
         raise HTTPException(status_code=404, detail="Client not found")
-    return ClientOut.model_validate(client, from_attributes=True)
+    return ClientOut.model_validate(current_client, from_attributes=True)
 
-@router.put("/{client_id}", response_model=dict)
+# TODO come up with a name to route (here client update him self)
+@router.put("/put_me", response_model=dict)
 async def update_client(
-    client_id: int,
     client_data: ClientUpdate,
     current_client: Client = Depends(get_current_client),
     session: AsyncSession = Depends(get_db)
 ) -> dict:
-    if current_client.id != client_id:
-        raise HTTPException(status_code=403, detail="Access forbidden")
-    client_data.id = client_id
+    client_data.id = current_client.id
     await update_client_data(session, client_data)
     return {"message": "succes updating client info"}
 
-@router.delete("/{client_id}", response_model=dict)
+
+# TODO come up with a name to route (here client delete him self)
+@router.delete("/delete_me", response_model=dict)
 async def delete_client(
-    client_id: int,
     current_client: Client = Depends(get_current_client),
     session: AsyncSession = Depends(get_db)
 ) -> dict:
-    if current_client.id != client_id:
-        raise HTTPException(status_code=403, detail="Access forbidden")
 
-    result = await session.execute(select(Client).filter(Client.id == client_id))
-    client = result.scalars().first()
-
-    if client:
-        await session.delete(client)
-        await session.commit()
-
-    return {"message": f"Client with id {client_id} has been deleted"}
+    await delete_client_db(current_client.id, session)
+    return {"message": f"Client with id {current_client.id} has been deleted"}
