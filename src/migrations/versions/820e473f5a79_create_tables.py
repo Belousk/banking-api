@@ -1,8 +1,8 @@
 """create tables
 
-Revision ID: 69f45c0063b9
+Revision ID: 820e473f5a79
 Revises: 
-Create Date: 2025-05-08 16:06:01.965838
+Create Date: 2025-05-08 16:25:51.455411
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '69f45c0063b9'
+revision: str = '820e473f5a79'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -29,9 +29,9 @@ def upgrade() -> None:
     sa.Column('phone_number', sa.String(length=20), nullable=False),
     sa.Column('created_at', sa.TIMESTAMP(), server_default=sa.text('now()'), nullable=False),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('email'),
     sa.UniqueConstraint('phone_number')
     )
+    op.create_index(op.f('ix_clients_email'), 'clients', ['email'], unique=True)
     op.create_table('accounts',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('client_id', sa.Integer(), nullable=False),
@@ -74,5 +74,6 @@ def downgrade() -> None:
     op.drop_table('transactions')
     op.drop_table('cards')
     op.drop_table('accounts')
+    op.drop_index(op.f('ix_clients_email'), table_name='clients')
     op.drop_table('clients')
     # ### end Alembic commands ###

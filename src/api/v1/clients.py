@@ -7,7 +7,7 @@ from src.models import Client
 from src.schemas.v1.client_schema import ClientCreate, ClientOut, ClientUpdate
 
 from src.api.v1.dependencies import get_current_client
-from src.services.client_service import create_client_db
+from src.services.client_service import create_client_db, update_client_data
 
 router = APIRouter(prefix="/clients", tags=["Clients"])
 
@@ -25,10 +25,10 @@ async def create_client(
 @router.get("/{client_id}", response_model=ClientOut)
 async def get_client(
     client_id: int,
-    current_user: Client = Depends(get_current_client),
+    current_client: Client = Depends(get_current_client),
     session: AsyncSession = Depends(get_db)
 ) -> ClientOut:
-    if current_user.client_id != client_id:
+    if current_client.id != client_id:
         raise HTTPException(status_code=403, detail="Access forbidden")
 
     result = await session.execute(select(Client).where(Client.id == client_id))
@@ -40,27 +40,14 @@ async def get_client(
 @router.put("/{client_id}", response_model=dict)
 async def update_client(
     client_id: int,
-    client_data: ClientCreate,
+    client_data: ClientUpdate,
     current_user: Client = Depends(get_current_client),
     session: AsyncSession = Depends(get_db)
 ):
     if current_user.id != client_id:
         raise HTTPException(status_code=403, detail="Access forbidden")
-
-
-    result = await session.execute(select(Client).filter(Client.id == client_id))
-    client = result.scalars().first()
-
-    if not client:
-        raise HTTPException(status_code=404, detail="Client not found")
-
-    client.full_name = client_data.full_name
-    client.phone_number = client_data.phone_number
-    client.email = client_data.email
-
-    await session.commit()
-
-
+    client_data.id = client_id
+    await update_client_data(session, client_data)
     return {"message": "succes updating client info"}
 
 @router.delete("/{client_id}", response_model=dict)

@@ -24,7 +24,6 @@ async def update_client_data(session: AsyncSession, client: ClientUpdate) -> Cli
     client_db.full_name = client.full_name
     client_db.email = client.email
     client_db.phone_number = client.phone_number
-    await session.refresh(client_db)
     await session.commit()
 
     return ClientOut.model_validate(client_db)
