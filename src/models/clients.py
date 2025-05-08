@@ -13,9 +13,9 @@ class Client(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     email: Mapped[EmailStr] = mapped_column(String(255), unique=True, nullable=False)
+    hashed_password = mapped_column(String, nullable=False)
     phone_number: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
 
-    accounts: Mapped[list["Account"]] = relationship("Account", back_populates="client", cascade="all, delete")
-    loans: Mapped[list["Loan"]] = relationship("Loan", back_populates="client", cascade="all, delete")
+    account: Mapped["Account"] = relationship("Account", back_populates="client", cascade="all, delete")
     user: Mapped["User"] = relationship("User", back_populates="client", uselist=False)

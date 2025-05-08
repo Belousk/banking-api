@@ -19,13 +19,12 @@ class Account(Base):
         back_populates="sender_account",
         foreign_keys="[Transaction.sender_account_id]"
     )
-
     received_transactions: Mapped[List["Transaction"]] = relationship(
         "Transaction",
         back_populates="receiver_account",
         foreign_keys="[Transaction.receiver_account_id]"
     )
-    client: Mapped["Client"] = relationship(back_populates="accounts")
+    client: Mapped["Client"] = relationship(back_populates="account")
 
     cards: Mapped[List["Card"]] = relationship(
         "Card",

@@ -31,14 +31,14 @@ async def get_client(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db)
 ) -> ClientOut:
-    if current_user.id != client_id:
+    if current_user.client_id != client_id:
         raise HTTPException(status_code=403, detail="Access forbidden")
 
     result = await session.execute(select(Client).where(Client.id == client_id))
     client = result.scalar_one_or_none()
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
-    return client
+    return ClientOut.model_validate(client, from_attributes=True)
 
 @router.put("/{client_id}", response_model=dict)
 async def update_client(
