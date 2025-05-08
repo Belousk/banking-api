@@ -13,14 +13,6 @@ tags_metadata = [
     },
     {
         "name": "Transactions",
-        "description": "Track money transactions: debit and credit operations.",
-    },
-    {
-        "name": "Loans",
-        "description": "Handle loan requests and loan management.",
-    },
-    {
-        "name": "Payments",
-        "description": "Make payments towards loans.",
+        "description": "Track money transactions: debit operations.",
     },
 ]
