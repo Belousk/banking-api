@@ -8,7 +8,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import settings
-from src.database import async_session_factory
+from src.database import async_session_factory, get_db
 from src.services import user_service
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -18,17 +18,10 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 
-def get_db():
-    async def _get_db():
-        async with async_session_factory() as session:
-            yield session
-    return _get_db
-
-
 @router.post("/login")
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_db())
+    db: AsyncSession = Depends(get_db)
 ):
     user = await user_service.get_user_by_email(db, form_data.username)
     if not user:
@@ -71,4 +64,3 @@ def refresh_token(refresh_token: str):
         return {"access_token": new_token, "token_type": "bearer"}
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
-
