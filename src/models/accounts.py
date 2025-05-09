@@ -13,8 +13,6 @@ class Account(Base):
     account_number: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
     balance: Mapped[float] = mapped_column(Numeric(15, 2), default=0)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
-
-
     client: Mapped["Client"] = relationship(back_populates="account", uselist=False)
 
     cards: Mapped[List["Card"]] = relationship(

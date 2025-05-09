@@ -40,6 +40,7 @@ class Transaction(Base):
         server_default=func.now()
     )
 
+
     # Опциональные связи
     sender_card: Mapped[Optional["Card"]] = relationship(
         "Card",

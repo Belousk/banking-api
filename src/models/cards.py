@@ -15,6 +15,7 @@ class Card(Base):
     card_type: Mapped[str] = mapped_column(String(10))
     balance: Mapped[float] = mapped_column(Numeric(15, 2), default=0)
 
+
     sent_transactions: Mapped[List["Transaction"]] = relationship(
         "Transaction",
         back_populates="sender_card",
