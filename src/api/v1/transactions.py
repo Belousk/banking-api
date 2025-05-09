@@ -1,23 +1,20 @@
-from decimal import Decimal
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
+
 
 from src.api.v1.dependencies import get_current_client
 from src.database import get_db
 from src.schemas.v1.transaction_schema import (TransactionCreate,
                                                TransactionOut,
                                                TransactionHistoryOut,
-                                               MoneyTransferRequest,
                                                MoneyTransferResponse, TransactionResponse)
-from src.models import Transaction
-from src.models.transactions import TransactionType
-from typing import List, Optional
-from src.models import Transaction, Account, Client
-from src.services.card_service import get_card_by_id
-from src.services.transaction_service import create_transaction_db, get_transactions_by_card_db, get_transaction_by_id, \
-    get_transactions_by_account_db, account_have_transaction
+
+from typing import List
+from src.models import Client
+from src.services.transaction_service import (create_transaction_db,
+                                              get_transactions_by_card_db,
+                                              get_transactions_by_account_db,
+                                              account_have_transaction)
 
 router = APIRouter(
     prefix="/transactions",
@@ -43,7 +40,7 @@ async def get_transaction(
     transaction = await account_have_transaction(transaction_id, current_client.account.id, session)
     return TransactionOut.model_validate(transaction)
 
-# TODO write endpoint to get all transaction by account(now I have transaction made by card)
+# TODO came up with name of that endpoint
 @router.get("/account/me", response_model=List[TransactionOut])
 async def get_transactions_by_account(
     current_client: Client = Depends(get_current_client),

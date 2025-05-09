@@ -23,8 +23,3 @@ class TransactionOut(TransactionCreate):
 class TransactionResponse(BaseSchema):
     message: str
 
-class MoneyTransferResponse(BaseSchema):
-    message: str
-
-class TransactionHistoryOut(TransactionOut):
-    pass

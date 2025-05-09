@@ -4,7 +4,6 @@ from typing import List
 from fastapi import HTTPException
 from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from src.models import Transaction, Account, Card
 from src.schemas.v1.transaction_schema import TransactionCreate
