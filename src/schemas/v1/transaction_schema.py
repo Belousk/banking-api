@@ -5,8 +5,8 @@ from datetime import datetime
 from src.schemas.v1.base import BaseSchema
 
 class MoneyTransferRequest(BaseSchema):
-    sender_account_id: int = Field(..., description="Sender account ID")
-    receiver_account_id: int = Field(..., description="Receiver account ID")
+    sender_card_id: int = Field(..., description="Sender account ID")
+    receiver_card_id: int = Field(..., description="Receiver account ID")
     amount: float = Field(..., gt=0, description="Amount to transfer (must be greater than 0)")
 
 

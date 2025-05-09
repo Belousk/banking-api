@@ -3,18 +3,15 @@ from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from src.database import async_session_factory, get_db
-from src.schemas.v1.account_schema import AccountCreate, AccountOut
-from src.schemas.v1.transaction_schema import (MoneyTransferResponse,
-                                               MoneyTransferRequest,
-                                               TransactionCreate,
+from src.database import get_db
+from src.schemas.v1.transaction_schema import (TransactionCreate,
                                                TransactionOut,
                                                TransactionHistoryOut,
                                                MoneyTransferRequest,
                                                MoneyTransferResponse)
 from src.models import Transaction
 from src.models.transactions import TransactionType
-from typing import List, Optional, Any, AsyncGenerator
+from typing import List, Optional
 from src.models import Transaction, Account, Client
 
 
@@ -26,8 +23,12 @@ router = APIRouter(
 
 
 @router.post("/", response_model=TransactionOut)
-async def create_transaction(transaction: TransactionCreate, session: AsyncSession = Depends(get_db)):
-    new_transaction = Transaction(**transaction.dict())
+async def create_transaction(
+        transaction: TransactionCreate,
+        session: AsyncSession = Depends(get_db)):
+    ...
+    new_transaction = Transaction(**transaction.model_dump())
+
     session.add(new_transaction)
     await session.commit()
     return new_transaction
@@ -40,7 +41,7 @@ async def get_transaction(transaction_id: int, session: AsyncSession = Depends(g
         raise HTTPException(status_code=404, detail="Transaction not found")
     return transaction
 
-
+# TODO write endpoint to get all transaction by account(now I have transaction made by card)
 @router.get("/account/{account_id}", response_model=List[TransactionHistoryOut])
 async def get_transactions_by_account(
     account_id: int,
@@ -50,18 +51,11 @@ async def get_transactions_by_account(
     """
     Get all transactions related to a specific account (both incoming and outgoing).
     """
-
-    query = select(Transaction).where(
-        (Transaction.sender_account_id == account_id) | (Transaction.receiver_account_id == account_id)
-    )
-
-    if transaction_type:
-        query = query.where(Transaction.transaction_type == transaction_type)
-
-    result = await session.execute(query.order_by(Transaction.transaction_date.desc()))
-    transactions = result.scalars().all()
+    ...
+    transactions = ...
     return transactions
 
+# TODO rewrite
 @router.get("/client/{client_id}", response_model=List[TransactionHistoryOut])
 async def get_transactions_by_client(
     client_id: int,
@@ -71,7 +65,7 @@ async def get_transactions_by_client(
     """
     Get all transactions related to a specific client by all their accounts.
     """
-
+    ...
     # Fetch all accounts of the client
     result = await session.execute(
         select(Account.id).where(Account.client_id == client_id)
@@ -92,7 +86,7 @@ async def get_transactions_by_client(
     transactions = result.scalars().all()
     return transactions
 
-
+# TODO rewrite
 @router.post("/transfer", response_model=MoneyTransferResponse)
 async def transfer_money(transfer_data: MoneyTransferRequest, session: AsyncSession = Depends(get_db)):
     if transfer_data.from_account_id == transfer_data.to_account_id:

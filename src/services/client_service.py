@@ -2,6 +2,7 @@ from datetime import timedelta, datetime, timezone
 from jose import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 from src.config import settings
 from src.models import Client
@@ -11,21 +12,27 @@ import hashlib
 from src.schemas.v1.client_schema import ClientCreate, ClientOut, ClientUpdate
 
 
-async def get_client_by_email(session: AsyncSession, email: str) -> ClientOut:
-    stmt = select(Client).where(Client.email == email)
+async def get_client_by_email(session: AsyncSession, email: str) -> Client:
+    stmt = (
+        select(Client)
+        .options(joinedload(Client.account))
+        .where(Client.email == email)
+    )
     result = await session.execute(stmt)
-    return ClientOut.model_validate(result.scalar_one_or_none(), from_attributes=True)
+    return result.scalar_one_or_none()
 
-async def get_client_by_id(session: AsyncSession, client_id: int) -> ClientOut:
-    stmt = select(Client).where(Client.id == client_id)
+async def get_client_by_id(session: AsyncSession, client_id: int) -> Client:
+    stmt = (
+        select(Client)
+        .options(joinedload(Client.account))
+        .where(Client.id == client_id)
+    )
     result = await session.execute(stmt)
-    return ClientOut.model_validate(result.scalar_one_or_none(), from_attributes=True)
+    return result.scalar_one_or_none()
 
 
 async def update_client_data(session: AsyncSession, client: ClientUpdate) -> ClientOut:
-    stmt = select(Client).where(Client.id == client.id)
-    res = await session.execute(stmt)
-    client_db = res.scalar_one_or_none()
+    client_db = await get_client_by_id(session, client.id)
     client_db.full_name = client.full_name
     client_db.email = client.email
     client_db.phone_number = client.phone_number

@@ -8,7 +8,7 @@ from sqlalchemy.future import select
 
 from src.schemas.v1.account_schema import AccountCreate, AccountOut
 
-
+# TODO might delete because of uselessness
 async def get_account_by_client_id(client_id: int, db: AsyncSession) -> AccountOut:
     stmt = select(Account).where(Account.client_id == client_id)
     result = await db.execute(stmt)
@@ -44,9 +44,7 @@ async def create_account_db(account_data: AccountCreate, client_id: int, db: Asy
     await db.refresh(account)
     return AccountOut.model_validate(account)
 
-async def delete_account_db(client_id: int, db: AsyncSession):
-    account = await get_account_by_client_id(client_id, db)
-
+async def delete_account_db(account: Account, db: AsyncSession):
     if account:
         await db.delete(account)
         await db.commit()

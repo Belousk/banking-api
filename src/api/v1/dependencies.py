@@ -3,6 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 
 from jose import jwt, JWTError
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 from src.config import settings
 from src.database import get_db
@@ -30,7 +31,11 @@ async def get_current_client(token: str = Depends(oauth2_scheme), session: Async
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    stmt = select(Client).where(Client.email == email)
+    stmt = (
+        select(Client)
+        .options(joinedload(Client.account))
+        .where(Client.email == email)
+    )
     result = await session.execute(stmt)
     client = result.scalar_one_or_none()
     if client is None:

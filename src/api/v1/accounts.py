@@ -27,13 +27,9 @@ async def create_account(
 @router.get("/get_me", response_model=AccountOut)
 async def get_account(
         current_client: Client = Depends(get_current_client),
-        session: AsyncSession = Depends(get_db),
 ) -> AccountOut:
-    account = await get_account_by_client_id(current_client.id, session)
-    return account
-
-
-
+    print(current_client.account)
+    return AccountOut.model_validate(current_client.account)
 
 
 # TODO come up with a name to route (here account delete him self)
@@ -42,5 +38,5 @@ async def delete_account(
     current_client: Client = Depends(get_current_client),
     session: AsyncSession = Depends(get_db)
 ):
-    await delete_account_db(current_client.id, session)
+    await delete_account_db(current_client.account, session)
     return {"message": f"Account has been deleted"}
