@@ -1,7 +1,7 @@
 from pydantic import Field
 from typing import Optional
 from datetime import date
-
+from decimal import Decimal
 from src.schemas.v1.base import BaseSchema
 
 
@@ -15,7 +15,7 @@ class CardOut(CardCreate):
     id: int
     expiration_date: Optional[date]
     cvv: str = Field(min_length=3, max_length=5)
-    balance: float = Field()
+    balance: Decimal
     # take from current_client.account.id
     account_id: int
 

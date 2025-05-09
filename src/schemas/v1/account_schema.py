@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from pydantic import Field
 from datetime import datetime
 
@@ -10,5 +12,5 @@ class AccountCreate(BaseSchema):
 class AccountOut(AccountCreate):
     id: int
     client_id: int
-    balance: float
+    balance: Decimal
     created_at: datetime

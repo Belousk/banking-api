@@ -25,10 +25,9 @@ async def create_card(
 @router.get("/{card_id}", response_model=CardOut)
 async def get_card(
         card_id: int,
-        current_client: Client = Depends(get_current_client),
         session: AsyncSession = Depends(get_db)
 ) -> CardOut:
-    card = await get_card_by_id(card_id, current_client.account.id, session)
+    card = await get_card_by_id(card_id, session)
     return CardOut.model_validate(card)
 
 

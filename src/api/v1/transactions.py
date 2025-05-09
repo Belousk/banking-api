@@ -3,18 +3,19 @@ from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
+from src.api.v1.dependencies import get_current_client
 from src.database import get_db
 from src.schemas.v1.transaction_schema import (TransactionCreate,
                                                TransactionOut,
                                                TransactionHistoryOut,
                                                MoneyTransferRequest,
-                                               MoneyTransferResponse)
+                                               MoneyTransferResponse, TransactionResponse)
 from src.models import Transaction
 from src.models.transactions import TransactionType
 from typing import List, Optional
 from src.models import Transaction, Account, Client
-
-
+from src.services.transaction_service import create_transaction_db
 
 router = APIRouter(
     prefix="/transactions",
@@ -22,16 +23,13 @@ router = APIRouter(
 
 
 
-@router.post("/", response_model=TransactionOut)
+@router.post("/", response_model=TransactionResponse)
 async def create_transaction(
         transaction: TransactionCreate,
+        current_client: Client = Depends(get_current_client),
         session: AsyncSession = Depends(get_db)):
-    ...
-    new_transaction = Transaction(**transaction.model_dump())
-
-    session.add(new_transaction)
-    await session.commit()
-    return new_transaction
+    await create_transaction_db(session, transaction, current_client.account)
+    return TransactionResponse.model_validate({"message": "Transaction created"})
 
 @router.get("/{transaction_id}", response_model=TransactionOut)
 async def get_transaction(transaction_id: int, session: AsyncSession = Depends(get_db)):
