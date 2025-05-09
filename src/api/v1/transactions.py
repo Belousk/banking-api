@@ -15,7 +15,8 @@ from src.models import Transaction
 from src.models.transactions import TransactionType
 from typing import List, Optional
 from src.models import Transaction, Account, Client
-from src.services.transaction_service import create_transaction_db
+from src.services.transaction_service import create_transaction_db, get_transactions_by_card_db, get_transaction_by_id, \
+    get_transactions_by_account_db
 
 router = APIRouter(
     prefix="/transactions",
@@ -27,100 +28,36 @@ router = APIRouter(
 async def create_transaction(
         transaction: TransactionCreate,
         current_client: Client = Depends(get_current_client),
-        session: AsyncSession = Depends(get_db)):
-    await create_transaction_db(session, transaction, current_client.account)
-    return TransactionResponse.model_validate({"message": "Transaction created"})
+        session: AsyncSession = Depends(get_db)
+) -> TransactionResponse:
+    await create_transaction_db(transaction, current_client.account, session)
+    return TransactionResponse(message="Transaction created")
 
 @router.get("/{transaction_id}", response_model=TransactionOut)
-async def get_transaction(transaction_id: int, session: AsyncSession = Depends(get_db)):
-    result = await session.execute(select(Transaction).where(Transaction.id == transaction_id))
-    transaction = result.scalar_one_or_none()
-    if not transaction:
-        raise HTTPException(status_code=404, detail="Transaction not found")
-    return transaction
+async def get_transaction(
+        transaction_id: int,
+        session: AsyncSession = Depends(get_db)
+) -> TransactionOut:
+    transaction = await get_transaction_by_id(transaction_id, session)
+    return TransactionOut.model_validate(transaction)
 
 # TODO write endpoint to get all transaction by account(now I have transaction made by card)
-@router.get("/account/{account_id}", response_model=List[TransactionHistoryOut])
+@router.get("/account/me", response_model=List[TransactionOut])
 async def get_transactions_by_account(
-    account_id: int,
-    transaction_type: Optional[TransactionType] = None,
+    current_client: Client = Depends(get_current_client),
     session: AsyncSession = Depends(get_db)
-):
+) -> List[TransactionOut]:
     """
     Get all transactions related to a specific account (both incoming and outgoing).
     """
-    ...
-    transactions = ...
-    return transactions
+    transactions = await get_transactions_by_account_db(current_client.account.id, session)
+    return [TransactionOut.model_validate(transaction) for transaction in transactions]
 
-# TODO rewrite
-@router.get("/client/{client_id}", response_model=List[TransactionHistoryOut])
-async def get_transactions_by_client(
-    client_id: int,
-    transaction_type: Optional[TransactionType] = None,
+
+@router.get("/card/{card_id}", response_model=List[TransactionOut])
+async def get_transactions_by_card(
+    card_id: int,
     session: AsyncSession = Depends(get_db)
-):
-    """
-    Get all transactions related to a specific client by all their accounts.
-    """
-    ...
-    # Fetch all accounts of the client
-    result = await session.execute(
-        select(Account.id).where(Account.client_id == client_id)
-    )
-    account_ids = [row[0] for row in result.all()]
-
-    if not account_ids:
-        raise HTTPException(status_code=404, detail="Client has no accounts.")
-
-    query = select(Transaction).where(
-        (Transaction.sender_account_id.in_(account_ids)) | (Transaction.receiver_account_id.in_(account_ids))
-    )
-
-    if transaction_type:
-        query = query.where(Transaction.transaction_type == transaction_type)
-
-    result = await session.execute(query.order_by(Transaction.transaction_date.desc()))
-    transactions = result.scalars().all()
-    return transactions
-
-# TODO rewrite
-@router.post("/transfer", response_model=MoneyTransferResponse)
-async def transfer_money(transfer_data: MoneyTransferRequest, session: AsyncSession = Depends(get_db)):
-    if transfer_data.from_account_id == transfer_data.to_account_id:
-        raise HTTPException(status_code=400, detail="Sender and receiver must be different.")
-
-    amount = Decimal(str(transfer_data.amount))
-
-    # Получить счета
-    result = await session.execute(
-        select(Account).where(Account.id.in_([transfer_data.from_account_id, transfer_data.to_account_id]))
-    )
-    accounts = {account.id: account for account in result.scalars().all()}
-
-    sender = accounts.get(transfer_data.from_account_id)
-    receiver = accounts.get(transfer_data.to_account_id)
-
-    if not sender or not receiver:
-        raise HTTPException(status_code=404, detail="Account not found.")
-
-    if sender.balance < amount:
-        raise HTTPException(status_code=400, detail="Insufficient funds.")
-
-    # Обновить балансы
-    sender.balance -= amount
-    receiver.balance += amount
-
-    # Создать транзакцию
-    transaction = Transaction(
-        sender_account_id=sender.id,
-        receiver_account_id=receiver.id,
-        amount=amount,
-        transaction_type=TransactionType.transfer,
-        description=f"Transfer from account {sender.account_number} to {receiver.account_number}"
-    )
-
-    session.add(transaction)
-    await session.commit()
-
-    return MoneyTransferResponse(message="Transfer successful.")
+) -> List[TransactionOut]:
+    transactions = await get_transactions_by_card_db(card_id, session)
+    return [TransactionOut.model_validate(transaction) for transaction in transactions]

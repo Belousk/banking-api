@@ -35,15 +35,21 @@ async def get_card_by_id(card_id: int, db: AsyncSession) -> Card:
         raise HTTPException(status_code=404, detail="Card not existing")
     return card
 
+async def get_card_by_card_number_db(card_number: str, db: AsyncSession) -> Card:
+    stmt = select(Card).where(Card.card_number == card_number)
+    res = await db.execute(stmt)
+    card = res.scalar_one_or_none()
+    if card is None:
+        raise HTTPException(status_code=404, detail="Card not existing")
+    return card
 
-
-async def get_cards_by_account_id(account_id: int, db: AsyncSession) -> List[CardOut]:
+async def get_cards_by_account_id(account_id: int, db: AsyncSession) -> List[Card]:
     """
         Return all cards which relates to account(by account_id)
     """
     stmt = select(Card).where(Card.account_id == account_id)
     res = await db.execute(stmt)
-    cards = [CardOut.model_validate(card) for card in res.scalars().all()]
+    cards = list(res.scalars().all())
     return cards
 
 async def delete_card_by_id(card_id: int, account_id: int, db: AsyncSession) -> None:
