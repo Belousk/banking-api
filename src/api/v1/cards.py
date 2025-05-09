@@ -35,6 +35,7 @@ async def get_card(
     card = await get_card_by_id(card_id, account.id, session)
     return CardOut.model_validate(card)
 
+
 @router.get("/", response_model=List[CardOut])
 async def get_card(
         current_client: Client = Depends(get_current_client),
