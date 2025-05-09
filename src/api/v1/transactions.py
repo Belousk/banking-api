@@ -15,8 +15,9 @@ from src.models import Transaction
 from src.models.transactions import TransactionType
 from typing import List, Optional
 from src.models import Transaction, Account, Client
+from src.services.card_service import get_card_by_id
 from src.services.transaction_service import create_transaction_db, get_transactions_by_card_db, get_transaction_by_id, \
-    get_transactions_by_account_db
+    get_transactions_by_account_db, account_have_transaction
 
 router = APIRouter(
     prefix="/transactions",
@@ -36,9 +37,10 @@ async def create_transaction(
 @router.get("/{transaction_id}", response_model=TransactionOut)
 async def get_transaction(
         transaction_id: int,
+        current_client: Client = Depends(get_current_client),
         session: AsyncSession = Depends(get_db)
 ) -> TransactionOut:
-    transaction = await get_transaction_by_id(transaction_id, session)
+    transaction = await account_have_transaction(transaction_id, current_client.account.id, session)
     return TransactionOut.model_validate(transaction)
 
 # TODO write endpoint to get all transaction by account(now I have transaction made by card)
@@ -57,7 +59,8 @@ async def get_transactions_by_account(
 @router.get("/card/{card_id}", response_model=List[TransactionOut])
 async def get_transactions_by_card(
     card_id: int,
+    current_client: Client = Depends(get_current_client),
     session: AsyncSession = Depends(get_db)
 ) -> List[TransactionOut]:
-    transactions = await get_transactions_by_card_db(card_id, session)
+    transactions = await get_transactions_by_card_db(card_id, current_client.account.id, session)
     return [TransactionOut.model_validate(transaction) for transaction in transactions]

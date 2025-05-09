@@ -11,6 +11,18 @@ from src.schemas.v1.transaction_schema import TransactionCreate
 from src.services.card_service import get_card_by_id
 
 
+async def account_have_transaction(
+        transaction_id: int,
+        account_id: int,
+        session: AsyncSession
+) -> Transaction:
+    transaction = await get_transaction_by_id(transaction_id, session)
+    sender_card = await get_card_by_id(transaction.sender_card_id, session)
+    receiver_card = await get_card_by_id(transaction.sender_card_id, session)
+    if account_id not in [sender_card.account_id, receiver_card.account_id]:
+        raise HTTPException(status_code=403, detail="It's not your card(Forribiden)")
+    return transaction
+
 async def create_transaction_db(
         transaction: TransactionCreate,
         current_account: Account,
@@ -51,10 +63,11 @@ async def get_transaction_by_id(transaction_id: int, db: AsyncSession) -> Transa
 
 async def get_transactions_by_card_db(
         card_id,
+        account_id,
         db: AsyncSession
 ) -> List[Transaction]:
-    stmt = (select(Transaction)
 
+    stmt = (select(Transaction)
             .where(or_(
                     Transaction.receiver_card_id == card_id,
                     Transaction.sender_card_id == card_id
