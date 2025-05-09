@@ -14,7 +14,8 @@ class CardOut(CardCreate):
     # generate automatically
     id: int
     expiration_date: Optional[date]
-    cvv: int = Field(min_length=3, max_length=5)
+    cvv: str = Field(min_length=3, max_length=5)
+    balance: float = Field()
     # take from current_client.account.id
     account_id: int
 

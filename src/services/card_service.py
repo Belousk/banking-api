@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from typing import List
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from dateutil.relativedelta import relativedelta
@@ -10,8 +11,8 @@ from random import randint
 
 # TODO make documentation for funcs
 
-def generate_cvv() -> int:
-    return randint(100, 1000)
+def generate_cvv() -> str:
+    return str(randint(100, 1000))
 
 async def create_card_db(card: CardCreate, account_id: int, db: AsyncSession) -> CardOut:
     db_card = Card(
@@ -23,13 +24,17 @@ async def create_card_db(card: CardCreate, account_id: int, db: AsyncSession) ->
     )
     db.add(db_card)
     await db.commit()
-    await db.refresh(card)
+    await db.refresh(db_card)
     return CardOut.model_validate(db_card)
 
-async def get_card_by_id(card_id: int, db: AsyncSession) -> CardOut:
-    stmt = select(Card).where(Card.id == card_id)
-    card = await db.execute(stmt)
+async def get_card_by_id(card_id: int, account_id: int, db: AsyncSession) -> CardOut:
+    stmt = select(Card).where(Card.id == card_id, Card.account_id == account_id)
+    res = await db.execute(stmt)
+    card = res.scalar_one_or_none()
+    if card is None:
+        raise HTTPException(status_code=404, detail="Card not existing")
     return CardOut.model_validate(card)
+
 
 
 async def get_cards_by_account_id(account_id: int, db: AsyncSession) -> List[CardOut]:
@@ -48,3 +53,9 @@ async def delete_card_by_id(card_id: int, account_id: int, db: AsyncSession) -> 
     if card:
         await db.delete(card)
         await db.commit()
+
+
+
+# TODO
+async def get_card_transactions():
+    ...

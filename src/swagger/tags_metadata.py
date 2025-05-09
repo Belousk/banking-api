@@ -1,7 +1,7 @@
 tags_metadata = [
     {
         "name": "Clients",
-        "description": "Operations with clients: create, get clients.",
+        "description": "Operations with clients: create, get, update delete clients.",
     },
     {
         "name": "Accounts",
