@@ -10,8 +10,7 @@ from src.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models import Client
-from src.schemas.v1.client_schema import ClientOut
-from src.services.client_service import get_client_by_email
+
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="api/v1/auth/login",

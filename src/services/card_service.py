@@ -27,13 +27,13 @@ async def create_card_db(card: CardCreate, account_id: int, db: AsyncSession) ->
     await db.refresh(db_card)
     return CardOut.model_validate(db_card)
 
-async def get_card_by_id(card_id: int, account_id: int, db: AsyncSession) -> CardOut:
-    stmt = select(Card).where(Card.id == card_id, Card.account_id == account_id)
+async def get_card_by_id(card_id: int, db: AsyncSession) -> Card:
+    stmt = select(Card).where(Card.id == card_id)
     res = await db.execute(stmt)
     card = res.scalar_one_or_none()
     if card is None:
         raise HTTPException(status_code=404, detail="Card not existing")
-    return CardOut.model_validate(card)
+    return card
 
 
 
