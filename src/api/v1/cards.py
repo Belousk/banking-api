@@ -2,19 +2,22 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from src.database import async_session_factory, get_db
-from src.models import Card
+from src.api.v1.dependencies import get_current_client
+from src.database import get_db
+from src.models import Card, Client
+from src.schemas.v1.card_schema import CardCreate
+from src.services.card_service import create_card_db
 
 router = APIRouter(prefix="/cards", tags=["Cards"])
 
 
 
 @router.post("/", response_model=dict)
-async def create_card(account_id: int, card_number: str, card_type: str, session: AsyncSession = Depends(get_db)):
-    card = Card(account_id=account_id, card_number=card_number, card_type=card_type)
-    session.add(card)
-    await session.commit()
-    await session.refresh(card)
+async def create_card(
+        card: CardCreate,
+        current_client: Client = Depends(get_current_client),
+        session: AsyncSession = Depends(get_db)):
+    await create_card_db(card, current_client.account.id, session)
     return {"id": card.id, "card_number": card.card_number}
 
 @router.get("/{card_id}", response_model=dict)

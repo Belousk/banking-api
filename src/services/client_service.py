@@ -1,8 +1,7 @@
-from datetime import timedelta, datetime
-
+from datetime import timedelta, datetime, timezone
 from jose import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
+from sqlalchemy import select
 
 from src.config import settings
 from src.models import Client
@@ -23,9 +22,10 @@ async def get_client_by_id(session: AsyncSession, client_id: int) -> ClientOut:
     return ClientOut.model_validate(result.scalar_one_or_none(), from_attributes=True)
 
 
-
 async def update_client_data(session: AsyncSession, client: ClientUpdate) -> ClientOut:
-    client_db = await session.get(Client, client.id)
+    stmt = select(Client).where(Client.id == client.id)
+    res = await session.execute(stmt)
+    client_db = res.scalar_one_or_none()
     client_db.full_name = client.full_name
     client_db.email = client.email
     client_db.phone_number = client.phone_number
@@ -48,19 +48,19 @@ async def create_client_db(db: AsyncSession, client: ClientCreate, password: str
 
     return ClientOut.model_validate(db_user, from_attributes=True)
 
-async def delete_client_db(client_id: int, db: AsyncSession):
+async def delete_client_db(client_id: int, db: AsyncSession) -> None:
     client = await get_client_by_id(db, client_id)
 
     if client:
         await db.delete(client)
         await db.commit()
 
-def verify_password(plain_password, hashed_password):
+def verify_password(plain_password, hashed_password) -> bool:
     return hashlib.sha256(plain_password.encode()).hexdigest() == hashed_password
 
 
-def create_token(data: dict, expires_delta: timedelta, key: bytes, token_type: str):
+def create_token(data: dict, expires_delta: timedelta, key: bytes, token_type: str) -> str:
     to_encode = data.copy()
-    expire = datetime.utcnow() + expires_delta
+    expire = datetime.now(timezone.utc) + expires_delta
     to_encode.update({"exp": expire, "type": token_type})
     return jwt.encode(to_encode, key, algorithm=settings.ALGORITHM)

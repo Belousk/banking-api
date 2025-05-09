@@ -1,13 +1,9 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
-
 from src.config import settings
-from src.database import async_session_factory, get_db
+from src.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-
-from src.models import Client
 from src.schemas.v1.client_schema import ClientOut
 from src.services.client_service import get_client_by_email
 
@@ -28,6 +24,6 @@ async def get_current_client(token: str = Depends(oauth2_scheme), session: Async
 
     client = await get_client_by_email(session, email)
 
-    return client
+    return ClientOut.model_validate(client)
 
 

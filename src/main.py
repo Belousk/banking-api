@@ -10,14 +10,16 @@ app = FastAPI(
     openapi_tags=tags_metadata
 )
 
-# Подключение всех роутеров
+# Connecting all route(api routes)
 app.include_router(api_router)
 
-# Запуск через Python напрямую
+# Starting uvicorn by running main.py file
 if __name__ == "__main__":
     uvicorn.run(
-        "src.main:app",          # Путь до приложения (ПутьМодуля:Переменная)
-        host="127.0.0.1",         # Хост для запуска
-        port=8000,                # Порт для сервера
-        reload=True,              # Автоперезапуск при изменениях (для разработки)
+        "src.main:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=True,              # Autoreload when smth changed(for develop)
     )
+
+# TODO make some documentation for funcs in files

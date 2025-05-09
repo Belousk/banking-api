@@ -19,12 +19,12 @@ class Transaction(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    sender_account_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("accounts.id", ondelete="SET NULL"), nullable=True
+    sender_card_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("cards.id", ondelete="SET NULL"), nullable=True
     )
 
-    receiver_account_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("accounts.id", ondelete="SET NULL"), nullable=True
+    receiver_card_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("cards.id", ondelete="SET NULL"), nullable=True
     )
 
     amount: Mapped[float] = mapped_column(Numeric(15, 2), nullable=False)
@@ -41,15 +41,15 @@ class Transaction(Base):
     )
 
     # Опциональные связи
-    sender_account: Mapped[Optional["Account"]] = relationship(
-        "Account",
-        foreign_keys=[sender_account_id],
+    sender_card: Mapped[Optional["Card"]] = relationship(
+        "Card",
+        foreign_keys=[sender_card_id],
         back_populates="sent_transactions",
     )
 
-    receiver_account: Mapped[Optional["Account"]] = relationship(
-        "Account",
-        foreign_keys=[receiver_account_id],
+    receiver_card: Mapped[Optional["Card"]] = relationship(
+        "Card",
+        foreign_keys=[receiver_card_id],
         back_populates="received_transactions",
     )
 

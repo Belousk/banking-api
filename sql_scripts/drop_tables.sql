@@ -1,6 +1,3 @@
-select * from transactions;
-
-
 DO $$
 DECLARE
     r RECORD;

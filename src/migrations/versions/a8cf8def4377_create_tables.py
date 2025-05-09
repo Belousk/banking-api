@@ -1,8 +1,8 @@
 """create tables
 
-Revision ID: 820e473f5a79
+Revision ID: a8cf8def4377
 Revises: 
-Create Date: 2025-05-08 16:25:51.455411
+Create Date: 2025-05-09 15:16:54.609151
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '820e473f5a79'
+revision: str = 'a8cf8def4377'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -40,7 +40,8 @@ def upgrade() -> None:
     sa.Column('created_at', sa.TIMESTAMP(), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['client_id'], ['clients.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('account_number')
+    sa.UniqueConstraint('account_number'),
+    sa.UniqueConstraint('client_id')
     )
     op.create_table('cards',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -49,20 +50,21 @@ def upgrade() -> None:
     sa.Column('expiration_date', sa.Date(), nullable=True),
     sa.Column('cvv', sa.String(length=4), nullable=True),
     sa.Column('card_type', sa.String(length=10), nullable=False),
+    sa.Column('balance', sa.Numeric(precision=15, scale=2), nullable=False),
     sa.ForeignKeyConstraint(['account_id'], ['accounts.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('card_number')
     )
     op.create_table('transactions',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('sender_account_id', sa.Integer(), nullable=True),
-    sa.Column('receiver_account_id', sa.Integer(), nullable=True),
+    sa.Column('sender_card_id', sa.Integer(), nullable=True),
+    sa.Column('receiver_card_id', sa.Integer(), nullable=True),
     sa.Column('amount', sa.Numeric(precision=15, scale=2), nullable=False),
     sa.Column('transaction_type', sa.Enum('debit', 'credit', 'transfer', name='transaction_type_enum', create_constraint=True), nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('transaction_date', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.ForeignKeyConstraint(['receiver_account_id'], ['accounts.id'], ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['sender_account_id'], ['accounts.id'], ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['receiver_card_id'], ['cards.id'], ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['sender_card_id'], ['cards.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
