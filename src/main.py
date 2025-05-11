@@ -23,3 +23,4 @@ if __name__ == "__main__":
     )
 
 # TODO make some documentation for funcs in files
+# TODO write summary for all endpoints

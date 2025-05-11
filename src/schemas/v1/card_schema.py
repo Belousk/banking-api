@@ -10,15 +10,13 @@ class CardCreate(BaseSchema):
     card_number: str = Field(min_length=16, max_length=16)
     card_type: str = Field(pattern="^(debit)$")
 
-class CardOut(CardCreate):
-    # generate automatically
+class CardShortOut(CardCreate):
     id: int
+    account_id: int
+
+class CardOut(CardShortOut):
     expiration_date: Optional[date]
     cvv: str = Field(min_length=3, max_length=5)
     balance: Decimal
-    # take from current_client.account.id
-    account_id: int
-
-
 
 

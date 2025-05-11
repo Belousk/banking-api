@@ -21,8 +21,7 @@ async def create_client(
     await create_client_db(session, client, password)
     return {'message': "Client created successfully"}
 
-# TODO come up with a name to route (here client get info about him self)
-@router.get("/get_me", response_model=ClientOut)
+@router.get("/me", response_model=ClientOut)
 async def get_client(
     current_client: Client = Depends(get_current_client)
 ) -> ClientOut:
@@ -30,24 +29,19 @@ async def get_client(
         raise HTTPException(status_code=404, detail="Client not found")
     return ClientOut.model_validate(current_client, from_attributes=True)
 
-# TODO come up with a name to route (here client update him self)
-@router.put("/put_me", response_model=dict)
+@router.put("/me", response_model=dict)
 async def update_client(
     client_data: ClientUpdate,
     current_client: Client = Depends(get_current_client),
     session: AsyncSession = Depends(get_db)
 ) -> dict:
-    client_data.id = current_client.id
-    await update_client_data(session, client_data)
+    await update_client_data(session, client_data, current_client.id)
     return {"message": "succes updating client info"}
 
-
-# TODO come up with a name to route (here client delete him self)
-@router.delete("/delete_me", response_model=dict)
+@router.delete("/me", response_model=dict)
 async def delete_client(
     current_client: Client = Depends(get_current_client),
     session: AsyncSession = Depends(get_db)
 ) -> dict:
-
     await delete_client_db(current_client.id, session)
     return {"message": f"Client with id {current_client.id} has been deleted"}

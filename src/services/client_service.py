@@ -30,9 +30,9 @@ async def get_client_by_id(session: AsyncSession, client_id: int) -> Client:
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
 
-
-async def update_client_data(session: AsyncSession, client: ClientUpdate) -> ClientOut:
-    client_db = await get_client_by_id(session, client.id)
+# TODO think of what to do if email changed
+async def update_client_data(session: AsyncSession, client: ClientUpdate, client_id: int) -> ClientOut:
+    client_db = await get_client_by_id(session, client_id)
     client_db.full_name = client.full_name
     client_db.email = client.email
     client_db.phone_number = client.phone_number

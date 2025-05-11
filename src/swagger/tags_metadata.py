@@ -5,7 +5,7 @@ tags_metadata = [
     },
     {
         "name": "Accounts",
-        "description": "Manage bank accounts: create and get accounts.",
+        "description": "Manage bank accounts: create, put, get and delete accounts.",
     },
     {
         "name": "Cards",

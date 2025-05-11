@@ -22,10 +22,10 @@ class ClientCreate(BaseSchema):
         return v
 
 
-class ClientUpdate(ClientCreate, ClientGet):
+class ClientUpdate(ClientCreate):
     pass
 
 
-class ClientOut(ClientUpdate):
+class ClientOut(ClientGet, ClientUpdate):
     hashed_password: str
     created_at: datetime
